@@ -1,0 +1,105 @@
+db.messages.find({ "headers.From" : "andrew.fastow@enron.com", "headers.To" : "jeff.skilling@enron.com" }).count()
+
+db.messages.find({ "headers.From" : "andrew.fastow@enron.com", "headers.To" : "john.lavorato@enron.com" }).count()
+
+db.messages.aggregate([
+	{"$unwind":"$headers.To"
+	},	
+	{"$group":{
+		"_id": { "Mid" : "$headers.Message-ID",  "From" : "$headers.From", "To" : "$headers.To" },
+		"cc":{"$sum":1}
+		}
+	},		
+	{"$group":{
+		"_id": { "From" : "$_id.From", "To" : "$_id.To" },
+		"cc":{"$sum":1}
+		}
+	},		
+	{"$sort":{
+		"cc":-1
+		}
+	},	
+	{"$limit":10
+	},
+], { allowDiskUse : true })
+
+
+db.messages.aggregate([
+	{"$unwind":"$headers.To"
+	},
+	{"$group":{
+		"_id": { "Mid" : "$_id"
+			, "comb" :  { 
+				$cond: [ { $gt : [ { $strcasecmp: [ "$headers.From", "$headers.To" ] }, 0 ] }, { $concat: [ "$headers.From", " - ", "$headers.To" ] }, { $concat: [ "$headers.To", " - ", "$headers.From" ] } ]
+				}
+			},
+		}
+	},	
+	{"$group":{
+		"_id": "$_id.comb",
+		"cc":{"$sum":1}
+		}
+	},		
+	{"$sort":{
+		"cc":-1
+		}
+	},		
+	{"$limit":10
+	},		
+], { allowDiskUse : true })
+
+
+
+db.messages.find( { "headers.Message-ID" : "<10075290.1075845393233.JavaMail.evans@thyme>" }).pretty()
+
+db.messages.find({}, { "headers.Message-ID" : 1, "headers.To" : 1 }).pretty()
+
+db.messages.update( { "headers.Message-ID" : "<8147308.1075851042335.JavaMail.evans@thyme>" }, { $push : { "headers.To" : "mrpotatohead@10gen.com" } })
+
+db.messages.update( { "headers.Message-ID" : "<8147308.1075851042335.JavaMail.evans@thyme>" }, { $push : { "headers.To" : "mrpotatohead@10gen.com" } })
+
+db.messages.aggregate([
+	{"$unwind":"$headers.To"
+	},	
+	{"$group":{
+		"_id": { "Mid" : "$headers.Message-ID", "From" : "$headers.From", "To" : "$headers.To" },
+		}
+	},		
+	{"$limit":1
+	},		
+], { allowDiskUse : true }).pretty()
+
+
+db.messages.aggregate([
+	{"$unwind":"$headers.To"
+	},
+	{"$group":{
+		"_id": { "From" : "$headers.From", "To" : "$headers.From" },
+		"cc":{"$sum":1}
+		}
+	},		
+		
+	{"$sort":{
+		"cc":-1
+		}
+	},
+	{"$limit":10
+	},		
+])
+
+
+
+db.messages.aggregate([
+	{"$unwind":"$headers.To"
+	},
+])
+
+
+{ "_id" : { "From" : "bob.shults@enron.com", "To" : "chris.edmonds@truequote.com" }, "cc" : 2 }
+
+
+db.messages.find({ "headers.From" : "bob.shults@enron.com", "headers.To" : "chris.edmonds@truequote.com" }, { "headers.From":1, "headers.To":1 }).pretty()
+
+db.messages.find({ "headers.From" : "chris.edmonds@truequote.com", "headers.To" : "bob.shults@enron.com" }, { "headers.From":1, "headers.To":1 }).pretty()
+
+
